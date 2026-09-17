@@ -211,16 +211,22 @@ order by count desc;
 -- ═══ Feedback & survey ═══════════════════════════════════════════════════════
 
 -- Most recent feedback.
-select created_at, player_id, playtime_seconds, message
+select created_at, player_id, app_version, playtime_seconds, message
 from feedback
 order by created_at desc
 limit 50;
 
 -- Survey answers grouped by question (skips blanks).
-select question, answer, player_id, created_at
+select question, answer, player_id, app_version, created_at
 from survey_answers
 where coalesce(answer, '') <> ''
 order by question, created_at desc;
+
+-- Feedback/survey volume by app version — is a complaint coming from someone on an old build?
+select app_version, count(*) as feedback_rows
+from feedback
+group by 1
+order by 1 desc nulls last;
 
 
 -- ═══ Debug: single-session timeline ══════════════════════════════════════════

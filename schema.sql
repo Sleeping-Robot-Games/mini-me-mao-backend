@@ -47,6 +47,7 @@ create table if not exists public.feedback (
     session_id       uuid        not null,
     message          text        not null,
     playtime_seconds integer,
+    app_version      text,
     created_at       timestamptz not null default now()
 );
 
@@ -54,13 +55,20 @@ create table if not exists public.feedback (
 -- the question set can change over time without a schema migration; group a submission by
 -- (session_id, created_at). Answers may be blank if the player skipped a question.
 create table if not exists public.survey_answers (
-    id         uuid primary key default gen_random_uuid(),
-    player_id  bigint      not null,
-    session_id uuid        not null,
-    question   text        not null,
-    answer     text,
-    created_at timestamptz not null default now()
+    id          uuid primary key default gen_random_uuid(),
+    player_id   bigint      not null,
+    session_id  uuid        not null,
+    question    text        not null,
+    answer      text,
+    app_version text,
+    created_at  timestamptz not null default now()
 );
+
+-- app_version on feedback/survey_answers was added after these tables first shipped — this backfills
+-- an already-provisioned project the same way `create table if not exists` backfills a fresh one, so
+-- re-running this file is safe either way.
+alter table public.feedback       add column if not exists app_version text;
+alter table public.survey_answers add column if not exists app_version text;
 
 -- Helpful indexes for the queries you'll actually run (per-player, per-session, over time).
 create index if not exists events_player_idx         on public.events (player_id);
