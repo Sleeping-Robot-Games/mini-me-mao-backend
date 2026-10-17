@@ -65,16 +65,34 @@ create table if not exists public.survey_answers (
 );
 
 -- Studio-admin triage votes on feedback rows, written by the ZZZERO Discord bot's `/mini feedback`
--- browser (never by the game). One row per (feedback, admin); an admin resetting their vote to
--- "None" deletes their row, so a missing row means "no vote yet". `voter` is a fixed name key
--- rather than a Discord ID so votes stay readable here and survive a Discord account change.
+-- browser (never by the game). One row per (feedback, admin). "close" is the only stored vote; an
+-- admin's default "Open" state is the absence of their row (choosing Open deletes it). `voter` is a
+-- fixed name key rather than a Discord ID so votes stay readable here and survive a Discord account
+-- change.
 create table if not exists public.feedback_votes (
     feedback_id uuid        not null references public.feedback(id) on delete cascade,
     voter       text        not null check (voter in ('memao', 'bronsky', 'ross')),
-    status      text        not null check (status in ('completed', 'interesting', 'meh')),
+    status      text        not null check (status in ('close')),
     updated_at  timestamptz not null default now(),
     primary key (feedback_id, voter)
 );
+
+-- One-time migration: votes were originally completed/interesting/meh. Moving to Open/Close wiped
+-- those votes (deliberately not mapped) and swapped the check constraint. Guarded on the old
+-- constraint so re-running this file never wipes Open/Close votes.
+do $$
+begin
+    if exists (
+        select 1 from pg_constraint
+        where conname = 'feedback_votes_status_check'
+          and pg_get_constraintdef(oid) like '%interesting%'
+    ) then
+        delete from public.feedback_votes;
+        alter table public.feedback_votes drop constraint feedback_votes_status_check;
+        alter table public.feedback_votes add constraint feedback_votes_status_check check (status in ('close'));
+    end if;
+end
+$$;
 
 -- app_version on feedback/survey_answers was added after these tables first shipped — this backfills
 -- an already-provisioned project the same way `create table if not exists` backfills a fresh one, so
