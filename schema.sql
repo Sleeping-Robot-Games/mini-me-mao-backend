@@ -144,20 +144,26 @@ create policy anon_insert_survey_answers on public.survey_answers
 
 -- ── ZZZERO web dashboard access (role: zzzero_bot) ────────────────────────────
 -- The studio's ZZZERO web dashboard connects with its own login role (created via SQL, not the
--- console's Roles page — see README step 6) to browse feedback and record admin votes: read-only on
--- feedback, read/write on feedback_votes, nothing else. Nothing deletes feedback — items every admin
--- voted Close are only hidden in the dashboard. RLS is enabled and the role doesn't own these tables, so it needs
--- explicit policies on top of the grants. Skipped entirely if the role hasn't been created yet, so
--- this file still runs cleanly on a fresh project.
+-- console's Roles page — see README step 6) to browse feedback and survey answers and record admin
+-- votes: read-only on feedback and survey_answers, read/write on feedback_votes, nothing else.
+-- Nothing deletes feedback — items every admin voted Close are only hidden in the dashboard. RLS is
+-- enabled and the role doesn't own these tables, so it needs explicit policies on top of the
+-- grants. Skipped entirely if the role hasn't been created yet, so this file still runs cleanly on
+-- a fresh project.
 do $$
 begin
     if exists (select 1 from pg_roles where rolname = 'zzzero_bot') then
         grant usage on schema public to zzzero_bot;
         grant select on public.feedback to zzzero_bot;
+        grant select on public.survey_answers to zzzero_bot;
         grant select, insert, update, delete on public.feedback_votes to zzzero_bot;
 
         drop policy if exists zzzero_bot_read_feedback on public.feedback;
         create policy zzzero_bot_read_feedback on public.feedback
+            for select to zzzero_bot using (true);
+
+        drop policy if exists zzzero_bot_read_survey_answers on public.survey_answers;
+        create policy zzzero_bot_read_survey_answers on public.survey_answers
             for select to zzzero_bot using (true);
 
         drop policy if exists zzzero_bot_all_feedback_votes on public.feedback_votes;

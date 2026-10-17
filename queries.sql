@@ -216,7 +216,8 @@ from feedback
 order by created_at desc
 limit 50;
 
--- Survey answers grouped by question (skips blanks).
+-- Survey answers grouped by question (skips blanks). The ZZZERO web dashboard's Survey tab shows the
+-- same data, by question or grouped into one response per session.
 select question, answer, player_id, app_version, created_at
 from survey_answers
 where coalesce(answer, '') <> ''
