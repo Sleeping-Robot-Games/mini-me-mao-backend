@@ -51,17 +51,18 @@ Postgres role, and **insert-only Row-Level Security** is the security boundary.
    fresh anonymous JWT from the Auth endpoint immediately before each send — see *Client behavior*
    below. Both URLs are safe to commit; RLS keeps the endpoint insert-only.
 
-6. **(Optional) ZZZERO Discord bot access.** The studio's ZZZERO bot browses feedback and records
-   admin triage votes (`feedback_votes`) through its `/mini feedback` command, connecting directly
-   with its own least-privilege login role. Create the role **in the SQL Editor** — roles made from
-   the console's Roles page join `neon_superuser` and get far more access than the bot needs:
+6. **(Optional) ZZZERO web dashboard access.** The studio's private ZZZERO dashboard
+   (`zzzero.sleepingrobotgames.com`, in the `zzzero-discord-bot` repo's `web/`) browses feedback and
+   records admin triage votes (`feedback_votes`), connecting directly with its own least-privilege
+   login role. Create the role **in the SQL Editor** — roles made from the console's Roles page join
+   `neon_superuser` and get far more access than the dashboard needs:
 
    ```sql
    create role zzzero_bot with login password '<long random password>';
    ```
 
    Then re-run `schema.sql`; its final block grants `zzzero_bot` read-only access to `feedback` and
-   read/write on `feedback_votes` (and skips itself if the role doesn't exist). Build the bot's
+   read/write on `feedback_votes` (and skips itself if the role doesn't exist). Build the dashboard's
    connection string by taking the project's normal connection string and swapping in
    `zzzero_bot` and its password, then store it in the bot repo's `BOT_MINI_DATABASE_URL` secret.
 

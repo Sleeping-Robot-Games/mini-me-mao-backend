@@ -229,8 +229,8 @@ group by 1
 order by 1 desc nulls last;
 
 -- Feedback with each admin's Open/Close triage vote + derived consensus (votes come from the ZZZERO
--- bot's `/mini feedback`; a missing vote row means Open). OPEN = no Close votes, CLOSED = all 3,
--- otherwise "N/3 CLOSE". Same rules as the bot's CONSENSUS column.
+-- web dashboard; a missing vote row means Open). OPEN = no Close votes, CLOSED = all 3, otherwise
+-- "N/3 CLOSE". Same rules as the dashboard's Consensus column (web/src/lib/feedback.ts).
 select f.created_at, f.app_version, f.message,
        coalesce(max(v.status) filter (where v.voter = 'memao'),   'open') as memao,
        coalesce(max(v.status) filter (where v.voter = 'bronsky'), 'open') as bronsky,

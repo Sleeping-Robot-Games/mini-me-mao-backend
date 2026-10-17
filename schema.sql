@@ -64,8 +64,8 @@ create table if not exists public.survey_answers (
     created_at  timestamptz not null default now()
 );
 
--- Studio-admin triage votes on feedback rows, written by the ZZZERO Discord bot's `/mini feedback`
--- browser (never by the game). One row per (feedback, admin). "close" is the only stored vote; an
+-- Studio-admin triage votes on feedback rows, written by the ZZZERO web dashboard
+-- (zzzero.sleepingrobotgames.com; never by the game). One row per (feedback, admin). "close" is the only stored vote; an
 -- admin's default "Open" state is the absence of their row (choosing Open deletes it). `voter` is a
 -- fixed name key rather than a Discord ID so votes stay readable here and survive a Discord account
 -- change.
@@ -142,10 +142,11 @@ drop policy if exists anon_insert_survey_answers on public.survey_answers;
 create policy anon_insert_survey_answers on public.survey_answers
     for insert to anonymous with check (true);
 
--- ── ZZZERO Discord bot access (role: zzzero_bot) ──────────────────────────────
--- The studio's ZZZERO bot connects with its own login role (created via SQL, not the console's
--- Roles page — see README step 6) to browse feedback and record admin votes: read-only on feedback, read/write on
--- feedback_votes, nothing else. RLS is enabled and the role doesn't own these tables, so it needs
+-- ── ZZZERO web dashboard access (role: zzzero_bot) ────────────────────────────
+-- The studio's ZZZERO web dashboard connects with its own login role (created via SQL, not the
+-- console's Roles page — see README step 6) to browse feedback and record admin votes: read-only on
+-- feedback, read/write on feedback_votes, nothing else. Nothing deletes feedback — items every admin
+-- voted Close are only hidden in the dashboard. RLS is enabled and the role doesn't own these tables, so it needs
 -- explicit policies on top of the grants. Skipped entirely if the role hasn't been created yet, so
 -- this file still runs cleanly on a fresh project.
 do $$
