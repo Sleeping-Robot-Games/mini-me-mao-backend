@@ -125,8 +125,8 @@ create policy anon_insert_survey_answers on public.survey_answers
     for insert to anonymous with check (true);
 
 -- ── ZZZERO Discord bot access (role: zzzero_bot) ──────────────────────────────
--- The studio's ZZZERO bot connects with its own login role (created in the Neon console, see
--- README) to browse feedback and record admin votes: read-only on feedback, read/write on
+-- The studio's ZZZERO bot connects with its own login role (created via SQL, not the console's
+-- Roles page — see README step 6) to browse feedback and record admin votes: read-only on feedback, read/write on
 -- feedback_votes, nothing else. RLS is enabled and the role doesn't own these tables, so it needs
 -- explicit policies on top of the grants. Skipped entirely if the role hasn't been created yet, so
 -- this file still runs cleanly on a fresh project.
