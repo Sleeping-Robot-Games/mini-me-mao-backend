@@ -17,7 +17,8 @@ Postgres role, and **insert-only Row-Level Security** is the security boundary.
 ## Contents
 
 - `schema.sql` — the `sessions`, `events`, `feedback`, and `survey_answers` tables plus insert-only
-  RLS for the `anonymous` role. **Unchanged by the auth switch** — see note in step 4.
+  RLS for the `anonymous` role. **Unchanged by the auth switch** — see note in step 4. Also the
+  bot-only `feedback_votes` table and the `zzzero_bot` role's grants (see step 6).
 - `queries.sql` — curated read queries (overview, retention, economy, content, feedback/survey) to
   run in the Neon SQL console; the "Reading your data" section below has a few inline examples.
 
@@ -49,6 +50,20 @@ Postgres role, and **insert-only Row-Level Security** is the security boundary.
    `/rest/v1`, no trailing slash) and the Neon Auth base to the step-3 URL. The client fetches a
    fresh anonymous JWT from the Auth endpoint immediately before each send — see *Client behavior*
    below. Both URLs are safe to commit; RLS keeps the endpoint insert-only.
+
+6. **(Optional) ZZZERO Discord bot access.** The studio's ZZZERO bot browses feedback and records
+   admin triage votes (`feedback_votes`) through its `/mini feedback` command, connecting directly
+   with its own least-privilege login role. Create the role **in the SQL Editor** — roles made from
+   the console's Roles page join `neon_superuser` and get far more access than the bot needs:
+
+   ```sql
+   create role zzzero_bot with login password '<long random password>';
+   ```
+
+   Then re-run `schema.sql`; its final block grants `zzzero_bot` read-only access to `feedback` and
+   read/write on `feedback_votes` (and skips itself if the role doesn't exist). Build the bot's
+   connection string by taking the project's normal connection string and swapping in
+   `zzzero_bot` and its password, then store it in the bot repo's `BOT_MINI_DATABASE_URL` secret.
 
 ## Verify before touching the game
 

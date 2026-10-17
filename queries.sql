@@ -228,6 +228,24 @@ from feedback
 group by 1
 order by 1 desc nulls last;
 
+-- Feedback with each admin's triage vote + derived consensus (votes come from the ZZZERO bot's
+-- `/mini feedback`). TBD = fewer than 3 votes; otherwise UNANIMOUS / MAJORITY / MIXED by how many
+-- distinct statuses the 3 votes span. Same rules as the bot's CONSENSUS column.
+select f.created_at, f.app_version, f.message,
+       max(v.status) filter (where v.voter = 'memao')   as memao,
+       max(v.status) filter (where v.voter = 'bronsky') as bronsky,
+       max(v.status) filter (where v.voter = 'ross')    as ross,
+       case
+           when count(v.voter) < 3              then 'TBD'
+           when count(distinct v.status) = 1    then 'UNANIMOUS'
+           when count(distinct v.status) = 2    then 'MAJORITY'
+           else 'MIXED'
+       end as consensus
+from feedback f
+left join feedback_votes v on v.feedback_id = f.id
+group by f.id
+order by f.created_at desc;
+
 
 -- ═══ Debug: single-session timeline ══════════════════════════════════════════
 
